@@ -98,10 +98,10 @@ test('Offline validator agrees with application schema', async () => {
 test('Upgrade activates immediately and reloads existing tabs without blocking activation', async () => {
   const listeners = {};
   const calls = [];
-  const context = vm.createContext({ URL,
+  const context = vm.createContext({ URL, Request,
     caches: {
       open: async () => ({ addAll: async () => calls.push('cached') }),
-      keys: async () => ['ranne-kruhy-v12', 'ranne-kruhy-v18', 'ranne-kruhy-v31', 'other-app'],
+      keys: async () => ['ranne-kruhy-v12', 'ranne-kruhy-v18', 'ranne-kruhy-v32', 'other-app'],
       delete: async key => calls.push(key)
     },
     self: {

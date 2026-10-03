@@ -1,4 +1,4 @@
-const CACHE = 'ranne-kruhy-v31';
+const CACHE = 'ranne-kruhy-v32';
 const ASSETS = ['./','./index.html','./styles.css','./js/app.js','./js/core.js','./js/history.js','./activities.json','./manifest.webmanifest','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png'];
 const ACTIVITIES_URL = new URL('./activities.json', self.location.href).href;
 
@@ -51,7 +51,7 @@ async function loadActivities(request) {
   }
 }
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
