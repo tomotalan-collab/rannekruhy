@@ -13,7 +13,7 @@ let favorites = read('rk-favorites-v2', []);
 if (!Array.isArray(favorites)) favorites = [];
 let grade = read('rk-grade', 1);
 if (![1,2].includes(grade)) grade = 1;
-let activities = [], current = null, filter = {kind:'all'}, screen = 'home';
+let activities = [], current = null, filter = {kind:'all'}, screen = 'home', fromList = false;
 let statusTimer;
 let selectionTimer = null;
 let selecting = false;
@@ -32,11 +32,11 @@ const paths = {
   chat:'<path d="M21 11a9 8 0 0 1-9 8H4l-2 3V11a9 8 0 0 1 19 0Z"/><path d="M7 11h.01M12 11h.01M17 11h.01" stroke-width="3"/>',
   search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
   pencil:'<path d="m3 21 5-1L21 7l-4-4L4 16l-1 5Zm11-15 4 4"/>',
+  sparkle:'<path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="M19 16v4m-2-2h4"/>',
   question:'<path d="M8 7a4 4 0 0 1 8 0c0 4-4 3-4 7m0 4v1"/>',
 };
 const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.people}</svg>`;
-const progress = n => `<div class="progress" aria-label="Krok ${n} z 3"><span>0${n}</span></div>`;
-function option(action, symbol, title, subtitle='', primary=false, value='') { return `<button class="option ${primary?'primary':''}" data-action="${action}" data-value="${escape(value)}"><span class="option-icon">${icon(symbol)}</span><span><strong>${title}</strong>${subtitle?`<small>${subtitle}</small>`:''}</span>${icon('arrow')}</button>`; }
+function option(action, symbol, title, subtitle='', primary=false, value='') { return `<button class="option ${primary?'primary':''}" data-action="${action}" data-value="${escape(value)}">${symbol?`<span class="option-icon">${icon(symbol)}</span>`:''}<span><strong>${title}</strong>${subtitle?`<small>${subtitle}</small>`:''}</span>${icon('arrow')}</button>`; }
 function render(focus = true) {
   if (selecting) { clearTimeout(statusTimer); status.textContent = ''; }
   clearTimeout(selectionTimer);
@@ -47,12 +47,21 @@ function render(focus = true) {
   gradeButton.hidden = screen === 'home';
   gradeButton.innerHTML = `${icon('people')} ${grade}. stupeň <span>↔</span>`;
   gradeButton.setAttribute('aria-label', `Zmeniť stupeň, aktuálne ${grade}. stupeň`);
-  if (screen === 'home') app.innerHTML = `<div class="intro-copy"><span class="eyebrow">01 / DOBRÝ ZAČIATOK DŇA</span><h1 tabindex="-1">RANNÉ<br><span>KRUHY</span><span class="title-dot">.</span></h1><p class="tagline">Inšpiruj sa aktivitami pre ranné kruhy.</p></div><div class="grade-options"><h2>Vyber si.</h2>${option('grade','calm','1. stupeň ZŠ','',false,'1')}${option('grade','people','2. stupeň ZŠ','',false,'2')}</div>${progress(1)}`;
-  if (screen === 'choose') app.innerHTML = `<span class="eyebrow">02 / VÝBER AKTIVITY</span><h1 tabindex="-1">Vyber si<br><span>dnešnú aktivitu.</span></h1><div class="choices">${option('all','dice','PREKVAP MA','Náhodná aktivita',true)}<details class="filter-disclosure"><summary>${icon('search')}<span>Vybrať podľa typu aktivity</span><span class="disclosure-mark" aria-hidden="true"></span></summary><div class="category-grid">${FILTERS.map(f => `<button class="category-option" data-action="category" data-value="${f.value}"><span aria-hidden="true">${f.emoji}</span>${f.label}</button>`).join('')}</div></details></div><button class="favorites-link" data-action="favorites">${icon('heart')} Moje obľúbené <span>${activities.filter(a=>a.gradeLevel===grade && favorites.includes(a.id)).length}</span></button>${progress(2)}`;
+  if (screen === 'home') app.innerHTML = `<div class="intro-copy"><h1 tabindex="-1">Odporúčané aktivity <span>z Príručky pre ranné kruhy</span></h1><p class="tagline">Aktivity v aplikácii vychádzajú z Príručky pre ranné kruhy, ktorú vydalo Ministerstvo školstva, výskumu, vývoja a mládeže Slovenskej republiky.</p></div><div class="grade-options"><h2>Vyber si:</h2>${option('grade','','Aktivity pre 1. stupeň','',false,'1')}${option('grade','','Aktivity pre 2. stupeň','',false,'2')}<button class="favorites-link" data-action="favorites-all">${icon('heart')} Moje obľúbené <span>${activities.filter(a=>favorites.includes(a.id)).length}</span></button></div>`;
+  if (screen === 'choose') app.innerHTML = `<h1 tabindex="-1">Vyber si:<br><span>dnešnú aktivitu.</span></h1><div class="choices">${option('all','sparkle','Vybrať náhodnú aktivitu','',true)}<details class="filter-disclosure"><summary>${icon('search')}<span>Vybrať podľa typu aktivity</span><span class="disclosure-mark" aria-hidden="true"></span></summary><div class="category-grid">${FILTERS.map(f => `<button class="category-option" data-action="category" data-value="${f.value}"><span aria-hidden="true">${f.emoji}</span>${f.label}</button>`).join('')}</div></details></div><button class="favorites-link" data-action="favorites">${icon('heart')} Moje obľúbené <span>${activities.filter(a=>a.gradeLevel===grade && favorites.includes(a.id)).length}</span></button>`;
   if (screen === 'activity' && current) {
     const a = current, liked = favorites.includes(a.id);
-    const selectionLabel = filter.kind === 'all' ? `Výber zo všetkých aktivít · ${grade}. stupeň` : filter.kind === 'favorites' ? `Výber z obľúbených · ${grade}. stupeň` : `Typ výberu: ${FILTERS.find(f => f.value === filter.value)?.label || ''} · ${grade}. stupeň`;
-    app.innerHTML = `<div class="activity-top"><button class="back" data-action="back">${icon('back')} Zmeniť výber</button><div class="activity-tools"><span class="activity-number">Aktivita ${escape(a.id.replace(/^0+(?=\d)/, ''))}</span><button class="heart ${liked?'liked':''}" data-action="favorite" aria-label="${liked?'Odstrániť z obľúbených':'Pridať medzi obľúbené'}" aria-pressed="${liked}">${icon('heart')}</button></div></div><div class="activity-heading"><span class="target">${icon('target')}</span><h1 tabindex="-1">${escape(a.title)}</h1></div><div class="metadata"><div class="activity-type" aria-label="Typ aktivity">${icon('chat')}<span>${a.types.map(escape).join(' · ')}</span></div><div class="activity-materials">${icon('bag')}<span><small>Pomôcky:</small> <strong>${escape(a.materials)}</strong></span></div></div><section class="steps"><h2>Čo robíme?</h2><ol>${a.steps.map(s=>`<li>${escape(s)}</li>`).join('')}</ol></section><div class="activity-extra"><details><summary>Reflexia</summary><ul>${a.reflection.map(q=>`<li>${escape(q)}</li>`).join('')}</ul></details><details><summary>Podrobný návod</summary><p>${escape(a.details)}</p></details></div><button class="another primary" data-action="another">${icon('dice')} Iná aktivita <span>→</span></button><p class="filter-note">${escape(selectionLabel)}</p>`;
+    const selectionLabel = filter.kind === 'all' ? `Výber zo všetkých aktivít · ${grade}. stupeň` : filter.kind === 'favorites-all' ? `Obľúbené · ${grade}. stupeň` : filter.kind === 'favorites' ? `Výber z obľúbených · ${grade}. stupeň` : `Typ výberu: ${FILTERS.find(f => f.value === filter.value)?.label || ''} · ${grade}. stupeň`;
+    app.innerHTML = `<div class="activity-top"><button class="back" data-action="${fromList?'list':'back'}">${icon('back')} ${fromList?'Späť na zoznam':'Zmeniť výber'}</button><div class="activity-tools"><span class="activity-number">Aktivita ${escape(a.id.replace(/^0+(?=\d)/, ''))}</span><button class="heart ${liked?'liked':''}" data-action="favorite" aria-label="${liked?'Odstrániť z obľúbených':'Pridať medzi obľúbené'}" aria-pressed="${liked}">${icon('heart')}</button></div></div><div class="activity-heading"><span class="target">${icon('target')}</span><h1 tabindex="-1">${escape(a.title)}</h1></div><div class="metadata"><div class="activity-type" aria-label="Typ aktivity">${icon('chat')}<span>${a.types.map(escape).join(' · ')}</span></div><div class="activity-materials">${icon('bag')}<span><small>Pomôcky:</small> <strong>${escape(a.materials)}</strong></span></div></div><section class="steps"><h2>Čo robíme?</h2><ol>${a.steps.map(s=>`<li>${escape(s)}</li>`).join('')}</ol></section><div class="activity-extra"><details><summary>Reflexia</summary><ul>${a.reflection.map(q=>`<li>${escape(q)}</li>`).join('')}</ul></details><details><summary>Podrobný návod</summary><p>${escape(a.details)}</p></details></div>${fromList?'':`<button class="another primary" data-action="another">${icon('sparkle')} Iná aktivita <span>→</span></button>`}<p class="filter-note">${escape(selectionLabel)}</p>`;
+  }
+  if (screen === 'list') {
+    const allFav = filter.kind === 'favorites-all';
+    const label = FILTERS.find(f => f.value === filter.value);
+    const items = allFav ? activities.filter(a => favorites.includes(a.id)) : filterActivities(activities, grade, filter, favorites);
+    const title = allFav ? `<span aria-hidden="true">❤️</span> Moje obľúbené` : label ? `<span aria-hidden="true">${label.emoji}</span> ${escape(label.label)}` : 'Aktivity';
+    const eyebrow = allFav ? '' : `${grade}. STUPEŇ · `;
+    const empty = allFav ? 'Zatiaľ nemáš obľúbenú aktivitu. Pri aktivite ťukni na srdiečko a nájdeš ju tu.' : 'Pre tento výber zatiaľ nie sú pridané aktivity.';
+    app.innerHTML = `<button class="back" data-action="${allFav?'home':'back'}">${icon('back')} ${allFav?'Späť na úvod':'Zmeniť výber'}</button><span class="eyebrow">${eyebrow}${items.length} ${items.length === 1 ? 'AKTIVITA' : items.length >= 2 && items.length <= 4 ? 'AKTIVITY' : 'AKTIVÍT'}</span><h1 tabindex="-1">${title}</h1>${items.length ? `<ul class="activity-list">${items.map(a => `<li><button class="list-item" data-action="open" data-value="${escape(a.id)}"><span class="list-number">${escape(a.id.replace(/^0+(?=\d)/, ''))}</span><span class="list-text"><strong>${escape(a.title)}</strong><small class="list-materials">${icon('bag')}<span>Pomôcky: ${escape(a.materials)}</span></small></span>${allFav ? `<small class="list-grade">${a.gradeLevel}. stupeň</small>` : ''}${icon('arrow')}</button></li>`).join('')}</ul>` : `<p class="intro">${empty}</p>`}`;
   }
   if (screen === 'empty') app.innerHTML = `<button class="back" data-action="back">${icon('back')} Zmeniť výber</button><div class="empty-icon">${icon(filter.kind==='favorites'?'heart':'search')}</div><h1 tabindex="-1">${filter.kind==='favorites'?'Tvoje obľúbené<br><span>ešte len prídu.</span>':'Tu je zatiaľ ticho.'}</h1><p class="intro">${filter.kind==='favorites'?'Pre tento stupeň zatiaľ nemáš obľúbenú aktivitu. Pri aktivite ťukni na srdiečko a nájdeš ju tu.':'Pre tento výber zatiaľ nie sú pridané aktivity.'}</p><button class="another primary" data-action="back">Vybrať aktivitu ${icon('arrow')}</button>`;
   if (focus) { app.querySelector('h1')?.focus({preventScroll:true}); window.scrollTo({top:0,behavior:'instant'}); }
@@ -94,8 +103,7 @@ function choose(duration = 0, another = false) {
   const overlay = document.createElement('div');
   overlay.className = 'selection-overlay';
   const label = another ? 'Vyberám ďalšiu aktivitu…' : 'Vyberám aktivitu…';
-  const faces = [[5,[1,3,5,7,9]], [2,[1,9]], [3,[1,5,9]], [4,[1,3,7,9]], [1,[5]], [6,[1,3,4,6,7,9]]];
-  overlay.innerHTML = `<div class="dice-stage" aria-hidden="true"><div class="rolling-dice">${faces.map(([value, dots]) => `<span class="dice-face face-${value}">${dots.map(position => `<i style="grid-area:${Math.ceil(position / 3)} / ${(position - 1) % 3 + 1}"></i>`).join('')}</span>`).join('')}</div></div><p role="status">${label}</p>`;
+  overlay.innerHTML = `<div class="book-stage" aria-hidden="true"><div class="book"><span class="book-cover"></span>${[1,2,3,4,5].map(n => `<span class="page page-${n}"><i></i><i></i><i></i></span>`).join('')}</div></div><p role="status">${label}</p>`;
   app.append(content, overlay);
   app.classList.add('is-selecting');
   app.setAttribute('aria-busy', 'true');
@@ -115,10 +123,15 @@ app.addEventListener('click', event => {
   const button = event.target.closest('button[data-action]'); if (!button) return;
   const {action,value} = button.dataset;
   if (action==='grade') { grade=Number(value); save('rk-grade',grade); screen='choose'; render(); }
-  else if (action==='back') { screen='choose'; render(); }
+  else if (action==='back') { fromList=false; screen='choose'; render(); }
+  else if (action==='list') { screen='list'; render(); }
+  else if (action==='home') home();
+  else if (action==='favorites-all') { fromList=false; filter={kind:'favorites-all'}; screen='list'; render(); }
+  else if (action==='category') { fromList=false; filter={kind:'category',value}; screen='list'; render(); }
+  else if (action==='open') { const a=activities.find(x=>x.id===value); if (a) { fromList=true; if (a.gradeLevel!==grade) { grade=a.gradeLevel; save('rk-grade',grade); } current=a; screen='activity'; render(); activityHistory.record(a.id); } }
   else if (action==='favorite') { const adding=!favorites.includes(current.id); favorites=adding?[...favorites,current.id]:favorites.filter(id=>id!==current.id); const saved=save('rk-favorites-v2',favorites); render(false); app.querySelector('.heart').focus(); if (saved) announce(adding?'Aktivita je medzi obľúbenými.':'Aktivita bola odstránená z obľúbených.'); }
   else if (action==='another') choose(800, true);
-  else if (['all','category','favorites'].includes(action)) { filter={kind:action,value}; choose(action==='all' ? 900 : 0); }
+  else if (['all','favorites'].includes(action)) { fromList=false; filter={kind:action,value}; choose(action==='all' ? 900 : 0); }
 });
 function home() { screen='home'; render(); }
 gradeButton.addEventListener('click', home);

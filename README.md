@@ -1,6 +1,6 @@
-# Ranné kruhy
+# Triedne komunity (Ranné kruhy)
 
-Responzívna aplikácia pre učiteľov. Pôvodné aktivity boli nahradené dodanou databázou. `activities.json` obsahuje 101 aktivít: 52 pre 1. stupeň a 49 pre 2. stupeň. Všetkých sedem filtrov je naplnených pre oba stupne. Aplikácia podporuje aj prázdnu databázu `[]`. Všetkých 101 aktivít prešlo obsahovou revíziou: krátke kroky vysvetľujú základný priebeh, podrobný návod dopĺňa organizáciu a príklady. Pomôcky a reflexia zodpovedajú konkrétnej činnosti. Ide o redakčne upravené verzie pre použitie na hodine, nie o doslovnú kópiu pôvodného dokumentu. Rozsah a významnejšie adaptácie uvádza [CONTENT_REVIEW.md](CONTENT_REVIEW.md).
+Responzívna aplikácia pre učiteľov. Aktivity vychádzajú z Príručky pre ranné kruhy, ktorú vydalo Ministerstvo školstva, výskumu, vývoja a mládeže Slovenskej republiky. Pôvodné aktivity boli nahradené dodanou databázou. `activities.json` obsahuje 101 aktivít: 52 pre 1. stupeň a 49 pre 2. stupeň. Všetkých sedem filtrov je naplnených pre oba stupne. Aplikácia podporuje aj prázdnu databázu `[]`. Všetkých 101 aktivít prešlo obsahovou revíziou: krátke kroky vysvetľujú základný priebeh, podrobný návod dopĺňa organizáciu a príklady. Pomôcky a reflexia zodpovedajú konkrétnej činnosti. Ide o redakčne upravené verzie pre použitie na hodine, nie o doslovnú kópiu pôvodného dokumentu. Rozsah a významnejšie adaptácie uvádza [CONTENT_REVIEW.md](CONTENT_REVIEW.md).
 
 ## Spustenie a kontrola
 
@@ -64,7 +64,12 @@ node --input-type=module -e "import fs from 'node:fs'; import {validateActivitie
 
 ## Výber a lokálne údaje
 
-PREKVAP MA vyberá zo všetkých aktivít zvoleného stupňa. Filter vyberá len svoju kategóriu. Iná aktivita zachová stupeň a filter a neopakuje aktuálnu aktivitu, ak existuje iná možnosť. Zachované je uprednostnenie ešte nevidených aktivít, potom najdávnejšie zobrazených; pri rovnakej priorite je výber náhodný.
+Úvodná obrazovka ponúka výber stupňa a odkaz na **Moje obľúbené** (obľúbené aktivity z oboch stupňov). Po výbere stupňa sú dve možnosti:
+
+- **Vybrať náhodnú aktivitu** vyberie z celého zvoleného stupňa. Počas výberu sa zobrazí animácia listovania v knihe.
+- **Vybrať podľa typu aktivity** zobrazí zoznam všetkých aktivít zvoleného typu a stupňa. V zozname je číslo, názov a pomôcky (alebo „Bez pomôcok“). Po kliknutí sa otvorí celá aktivita a tlačidlo „Späť na zoznam“ vráti do zoznamu. Tu sa nevyberá náhodne.
+
+Pri náhodnom výbere zostáva zachované uprednostnenie ešte nevidených aktivít, potom najdávnejšie zobrazených; pri rovnakej priorite je výber náhodný. Tlačidlo „Iná aktivita“ zachová stupeň a typ a neopakuje aktuálnu aktivitu, ak existuje iná možnosť.
 
 Obľúbené sa ukladajú do `rk-favorites-v2`, história do `rk-activity-history-v2`. Staré kľúče sa pri otvorení odstránia; pôvodné ID sa neprenesú do novej databázy. Úložisko je lokálne pre zariadenie a prehliadač. Pri jeho zablokovaní funguje aplikácia počas otvorenej relácie. Reflexia a podrobný návod sú pri otvorení aktivity zatvorené.
 
@@ -72,4 +77,4 @@ Obľúbené sa ukladajú do `rk-favorites-v2`, história do `rk-activity-history
 
 Nahrajte `index.html`, `styles.css`, `activities.json`, `manifest.webmanifest`, `sw.js` a priečinky `js/` a `icons/` na statický HTTPS hosting. Podadresár je podporovaný. Testovacie súbory sa do aplikácie nenačítavajú.
 
-Cache má verziu `ranne-kruhy-v26`. Po stiahnutí novej verzie sa aktualizácia aktivuje aj pri otvorených kartách, odstráni staré cache a obnoví karty aplikácie. Pri prvom nainštalovaní offline podpory sa stránka automaticky neobnovuje. Dáta sa načítavajú najprv zo siete, s limitom 3 sekundy; pri chybe sa použije uložená verzia novej databázy. Prázdne pole je platná databáza a nahrádza aj predtým uložené aktivity. Zmeny samotných dát nevyžadujú zmenu verzie cache; zmeny kódu áno.
+Cache má verziu `ranne-kruhy-v29`. Po stiahnutí novej verzie sa aktualizácia aktivuje aj pri otvorených kartách, odstráni staré cache a obnoví karty aplikácie. Pri prvom nainštalovaní offline podpory sa stránka automaticky neobnovuje. Dáta sa načítavajú najprv zo siete, s limitom 3 sekundy; pri chybe sa použije uložená verzia novej databázy. Prázdne pole je platná databáza a nahrádza aj predtým uložené aktivity. Zmeny samotných dát nevyžadujú zmenu verzie cache; zmeny kódu áno.

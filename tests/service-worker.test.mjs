@@ -101,7 +101,7 @@ test('Upgrade activates immediately and reloads existing tabs without blocking a
   const context = vm.createContext({ URL,
     caches: {
       open: async () => ({ addAll: async () => calls.push('cached') }),
-      keys: async () => ['ranne-kruhy-v12', 'ranne-kruhy-v18', 'ranne-kruhy-v26', 'other-app'],
+      keys: async () => ['ranne-kruhy-v12', 'ranne-kruhy-v18', 'ranne-kruhy-v29', 'other-app'],
       delete: async key => calls.push(key)
     },
     self: {
